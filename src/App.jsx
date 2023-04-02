@@ -2,15 +2,16 @@ import { useState, useEffect, useRef } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-import { getData, getDataById } from './api/people'
+import { getData, getDataById, getDataSearch } from './api/people'
 
 function App() {
+  const [page, setPage] = useState(1)
   const [textSearch, setTextSearch] = useState('')
   const [people, setPeople] = useState([]);
   const [errorState, setErrorState] = useState({hasError:false})
   const [currentCharacter, setCurrentCharacter] = useState(1)
   const [details, setDetails] = useState({})
-  const inputSearch = useRef;
+  const inputSearch = useRef();
 
 
   const handleError = (e) => {
@@ -31,25 +32,35 @@ function App() {
 
   const onSearchSubmit = (event) => {
     if (event.key !== 'Enter') return;
+    event.preventDefault();
 
     inputSearch.current.value = '';
     setDetails({});
 
-    
-    
+    getDataSearch(textSearch).then(data => {setPeople(data)}).catch( error => handleError(error))
+    setPage(1)
+  }
+
+  const onChangePage = (next) => {
+    const totalPages = Math.ceil(people.count / 10);
+    if (!people.previous && page + next <= 0) return;
+    if (!people.next && page + next >= totalPages) return;
+
+    setPage(page + next)
+  
   }
 
   useEffect(() => {
-    getDataById(currentCharacter).then(data => setDetails(data))
+    getDataById(currentCharacter).then(data => setDetails(data)).catch( error => handleError(error))
   }, [currentCharacter])
   
 
   useEffect(() => {
     
-    getData()
+    getData(page)
       .then((data) => setPeople(data))
       .catch( error => handleError(error))
-  }, [])
+  }, [page])
   
 
   return (
@@ -64,14 +75,26 @@ function App() {
           ref={inputSearch} 
           type='text'></input>
 
+
+
+      {
+        people.results && (
+        <>
+          <ul>
+            {
+              people.results.map((el) => (
+                <li onClick={() => showDetails(el)} key={el.name}>{el.name}</li>
+              ))
+            }
+          </ul>
+        <section>
+          <button onClick={() => onChangePage(-1)}>Prev</button> | {page} | <button onClick={() => onChangePage(+1)} >Next</button>
+        </section>
+        </>
+        
+        )
+      }
       
-      <ul>
-        {
-          people.map((el) => (
-            <li onClick={() => showDetails(el)} key={el.name}>{el.name}</li>
-          ))
-        }
-      </ul>
 
       <div>
           {
