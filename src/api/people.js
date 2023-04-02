@@ -1,13 +1,13 @@
 
 
-export async function getData(){
+export async function getData(page){
     try {
-        const response = await fetch('https://swapi.dev/api/people')
+        const response = await fetch(`https://swapi.dev/api/people/?page=${page}`)
         if (!response.ok) {
             throw new Error('Error en el servidor')
         }
         const data = await response.json()
-        return data.results
+        return data
     } catch (error) {
         throw new Error('Error en el servidor')
     }
